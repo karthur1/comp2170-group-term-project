@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Open Trivia Database Quiz</title>
+</head>
+<body>
+	<h1>Open Trivia Database Quiz</h1>
+	<div id="quiz-container"></div>
+
+	<script>
+		const quizContainer = document.getElementById('quiz-container');
+		const apiUrl = 'https://opentdb.com/api.php?amount=10&category=15&difficulty=easy&type=multiple';
+
+		// Fetch the questions from the API
+		fetch(apiUrl)
+			.then(response => response.json())
+			.then(data => {
+				const questions = data.results;
+
+				// Create the quiz questions and answers
+				const quizQuestions = questions.map(question => {
+					const answers = [...question.incorrect_answers, question.correct_answer];
+					shuffleArray(answers);
+
+					return {
+						question: question.question,
+						answers: answers,
+						correctAnswer: question.correct_answer
+					};
+				});
+
+				// Render the quiz on the page
+				renderQuiz(quizQuestions);
+			})
+			.catch(error => console.log(error));
+
+		// Function to shuffle an array randomly
+		function shuffleArray(array) {
+			for (let i = array.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[array[i], array[j]] = [array[j], array[i]];
+			}
+		}
+
+		// Function to render the quiz on the page
+		function renderQuiz(questions) {
+			let quizHtml = '';
+
+			questions.forEach((question, index) => {
+				quizHtml += `<div>
+								<h2>Question ${index + 1}:</h2>
+								<p>${question.question}</p>
+								<ul>`;
+
+				question.answers.forEach(answer => {
+					quizHtml += `<li><input type="radio" name="question${index}" value="${answer}">${answer}</li>`;
+				});
+
+				quizHtml += `		</ul>
+							</div>`;
+			});
+
+			quizHtml += `<button id="submit-button">Submit Quiz</button>`;
+			quizContainer.innerHTML = quizHtml;
+
+			const submitButton = document.getElementById('submit-button');
+			submitButton.addEventListener('click', () => {
+				checkAnswers(questions);
+			});
+		}
+
+		// Function to check the user's answers and display the results
+		function checkAnswers(questions) {
+			let score = 0;
+
+			questions.forEach((question, index) => {
+				const selectedAnswer = document.querySelector(`input[name="question${index}"]:checked`).value;
+
+				if (selectedAnswer === question.correctAnswer) {
+					score++;
+				}
+			});
+
+			const quizResult = `You scored ${score} out of ${questions.length} questions!`;
+			quizContainer.innerHTML += `<p>${quizResult}</p>`;
+		}
+	</script>
+</body>
+</html>
